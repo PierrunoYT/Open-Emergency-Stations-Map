@@ -11,6 +11,8 @@
     <div class="container">
         <div id="sidebar">
             <h1>Police Stations</h1>
+            <input type="text" id="locationSearch" placeholder="Enter location">
+            <button id="searchButton">Search</button>
             <ul id="stationsList"></ul>
         </div>
         <div id="map"></div>
@@ -19,7 +21,7 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
         // Initialize the map
-        var map = L.map('map').setView([47.3769, 8.5417], 12);  // Centered on Zürich
+        var map = L.map('map').setView([0, 0], 2);  // World view
 
         // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -27,15 +29,14 @@
         }).addTo(map);
 
         // Function to fetch and display police stations
-        function fetchPoliceStations() {
+        function fetchPoliceStations(lat, lon, radius) {
             var overpassUrl = 'https://overpass-api.de/api/interpreter';
             var query = `
                 [out:json];
-                area["name"="Zürich"]->.searchArea;
                 (
-                  node["amenity"="police"](area.searchArea);
-                  way["amenity"="police"](area.searchArea);
-                  relation["amenity"="police"](area.searchArea);
+                  node["amenity"="police"](around:${radius},${lat},${lon});
+                  way["amenity"="police"](around:${radius},${lat},${lon});
+                  relation["amenity"="police"](around:${radius},${lat},${lon});
                 );
                 out body;
                 >;
@@ -85,8 +86,43 @@
             });
         }
 
-        // Call the function to fetch and display police stations
-        fetchPoliceStations();
+        // Function to update map based on search
+        function searchLocation() {
+            var location = document.getElementById('locationSearch').value;
+            if (location) {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            var lat = parseFloat(data[0].lat);
+                            var lon = parseFloat(data[0].lon);
+                            map.setView([lat, lon], 12);
+                            fetchPoliceStations(lat, lon, 5000);
+                        } else {
+                            alert('Location not found');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error searching location:', error);
+                        alert('Error searching location. Please try again.');
+                    });
+            }
+        }
+
+        // Event listener for search button
+        document.getElementById('searchButton').addEventListener('click', searchLocation);
+
+        // Event listener for map movement
+        map.on('moveend', function() {
+            var center = map.getCenter();
+            var radius = map.getBounds().getNorthEast().distanceTo(map.getCenter());
+            fetchPoliceStations(center.lat, center.lng, radius);
+        });
+
+        // Initial fetch of police stations
+        var initialCenter = map.getCenter();
+        var initialRadius = map.getBounds().getNorthEast().distanceTo(map.getCenter());
+        fetchPoliceStations(initialCenter.lat, initialCenter.lng, initialRadius);
     </script>
 </body>
 </html>
