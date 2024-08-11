@@ -167,8 +167,13 @@ function addStationToMap(station) {
         case 'doctors':
             icon = doctorIcon;
             break;
-        default:
+        case 'police':
+        case 'police_post':
             icon = policeIcon;
+            break;
+        default:
+            console.log('Unknown station type:', station.type);
+            icon = policeIcon; // Default to police icon if type is unknown
     }
     var marker = L.marker([station.lat, station.lon], {icon: icon})
         .bindPopup(popupContent);
