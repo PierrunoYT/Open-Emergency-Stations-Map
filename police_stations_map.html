@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Police Stations Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
     <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -32,14 +34,29 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
     <script>
         // Initialize the map
         var map = L.map('map').setView([0, 0], 2);  // World view
+
+        // Add geocoder control
+        L.Control.geocoder().addTo(map);
 
         // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
+
+        // Custom icon for police stations
+        var policeIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
 
         // Function to fetch and display police stations
         let markers = [];
@@ -119,7 +136,7 @@
 
         function addStationToMap(station) {
             var popupContent = `<b>${station.name}</b><br>${station.address}`;
-            var marker = L.marker([station.lat, station.lon]).addTo(map)
+            var marker = L.marker([station.lat, station.lon], {icon: policeIcon}).addTo(map)
                 .bindPopup(popupContent);
             markers.push(marker);
         }
@@ -175,6 +192,14 @@
 
         // Event listener for search button
         document.getElementById('searchButton').addEventListener('click', searchLocation);
+
+        // Add geolocation control
+        L.control.locate({
+            position: 'topright',
+            strings: {
+                title: "Show me where I am"
+            }
+        }).addTo(map);
 
         // Event listener for map movement
         map.on('moveend', function() {
