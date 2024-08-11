@@ -13,6 +13,19 @@
             <h1>Police Stations</h1>
             <input type="text" id="locationSearch" placeholder="Enter location">
             <button id="searchButton">Search</button>
+            <div>
+                <label for="stationTypeFilter">Filter by type:</label>
+                <select id="stationTypeFilter">
+                    <option value="">All</option>
+                    <option value="police">Police</option>
+                    <option value="police_post">Police Post</option>
+                </select>
+            </div>
+            <div>
+                <label for="sortByDistance">
+                    <input type="checkbox" id="sortByDistance"> Sort by distance
+                </label>
+            </div>
             <ul id="stationsList"></ul>
         </div>
         <div id="map"></div>
@@ -29,14 +42,18 @@
         }).addTo(map);
 
         // Function to fetch and display police stations
+        let markers = [];
+        let selectedStationType = '';
+        let sortByDistanceEnabled = false;
+
         function fetchPoliceStations(lat, lon, radius) {
             var overpassUrl = 'https://overpass-api.de/api/interpreter';
             var query = `
                 [out:json];
                 (
-                  node["amenity"="police"](around:${radius},${lat},${lon});
-                  way["amenity"="police"](around:${radius},${lat},${lon});
-                  relation["amenity"="police"](around:${radius},${lat},${lon});
+                  node["amenity"~"^(police|police_post)$"](around:${radius},${lat},${lon});
+                  way["amenity"~"^(police|police_post)$"](around:${radius},${lat},${lon});
+                  relation["amenity"~"^(police|police_post)$"](around:${radius},${lat},${lon});
                 );
                 out body;
                 >;
@@ -49,6 +66,7 @@
             })
             .then(response => response.json())
             .then(data => {
+                clearMarkers();
                 const stationsList = document.getElementById('stationsList');
                 stationsList.innerHTML = ''; // Clear existing list
 
@@ -57,13 +75,23 @@
                     return;
                 }
 
-                data.elements.forEach((element, index) => {
-                    if (element.type === 'node') {
-                        processPoliceStation(element, element.lat, element.lon);
-                    } else if (element.type === 'way' || element.type === 'relation') {
-                        if (element.center) {
-                            processPoliceStation(element, element.center.lat, element.center.lon);
-                        }
+                let stations = [];
+                data.elements.forEach((element) => {
+                    if (element.type === 'node' && element.lat && element.lon) {
+                        stations.push(processPoliceStation(element, element.lat, element.lon));
+                    } else if ((element.type === 'way' || element.type === 'relation') && element.center) {
+                        stations.push(processPoliceStation(element, element.center.lat, element.center.lon));
+                    }
+                });
+
+                if (sortByDistanceEnabled) {
+                    stations.sort((a, b) => a.distance - b.distance);
+                }
+
+                stations.forEach(station => {
+                    if (!selectedStationType || station.type === selectedStationType) {
+                        addStationToMap(station);
+                        addStationToSidebar(station);
                     }
                 });
             })
@@ -76,19 +104,50 @@
         function processPoliceStation(element, lat, lon) {
             var name = element.tags.name || 'Unnamed Police Station';
             var address = element.tags['addr:street'] ? `${element.tags['addr:street']} ${element.tags['addr:housenumber'] || ''}` : 'Address not available';
+            var type = element.tags.amenity;
+            var distance = calculateDistance(map.getCenter().lat, map.getCenter().lng, lat, lon);
             
-            var popupContent = `<b>${name}</b><br>${address}`;
-            var marker = L.marker([lat, lon]).addTo(map)
-                .bindPopup(popupContent);
+            return {
+                name: name,
+                address: address,
+                lat: lat,
+                lon: lon,
+                type: type,
+                distance: distance
+            };
+        }
 
-            // Add to sidebar list
+        function addStationToMap(station) {
+            var popupContent = `<b>${station.name}</b><br>${station.address}`;
+            var marker = L.marker([station.lat, station.lon]).addTo(map)
+                .bindPopup(popupContent);
+            markers.push(marker);
+        }
+
+        function addStationToSidebar(station) {
             const listItem = document.createElement('li');
-            listItem.innerHTML = `<strong>${name}</strong><br>${address}`;
+            listItem.innerHTML = `<strong>${station.name}</strong><br>${station.address}`;
             listItem.onclick = () => {
-                map.setView([lat, lon], 15);
-                marker.openPopup();
+                map.setView([station.lat, station.lon], 15);
+                markers.find(m => m.getLatLng().lat === station.lat && m.getLatLng().lng === station.lon).openPopup();
             };
             document.getElementById('stationsList').appendChild(listItem);
+        }
+
+        function clearMarkers() {
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radius of the Earth in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
         }
 
         // Function to update map based on search
@@ -119,6 +178,22 @@
 
         // Event listener for map movement
         map.on('moveend', function() {
+            var center = map.getCenter();
+            var radius = map.getBounds().getNorthEast().distanceTo(map.getCenter());
+            fetchPoliceStations(center.lat, center.lng, radius);
+        });
+
+        // Event listener for station type filter
+        document.getElementById('stationTypeFilter').addEventListener('change', function() {
+            selectedStationType = this.value;
+            var center = map.getCenter();
+            var radius = map.getBounds().getNorthEast().distanceTo(map.getCenter());
+            fetchPoliceStations(center.lat, center.lng, radius);
+        });
+
+        // Event listener for sort by distance toggle
+        document.getElementById('sortByDistance').addEventListener('change', function() {
+            sortByDistanceEnabled = this.checked;
             var center = map.getCenter();
             var radius = map.getBounds().getNorthEast().distanceTo(map.getCenter());
             fetchPoliceStations(center.lat, center.lng, radius);
