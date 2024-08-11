@@ -40,6 +40,19 @@ var fireIcon = L.divIcon({
 // Ensure both emoji icons have the same font size
 document.documentElement.style.setProperty('--emoji-font-size', '30px');
 
+// Function to handle pointer events
+function handlePointerEvent(e) {
+    if (e.pressure !== undefined) {
+        console.log('Pressure:', e.pressure);
+    }
+    if (e.pointerType !== undefined) {
+        console.log('Pointer type:', e.pointerType);
+    }
+}
+
+// Add event listener for pointer events
+document.addEventListener('pointerdown', handlePointerEvent);
+
 // Function to fetch and display police stations
 let markers = [];
 let selectedStationType = '';
