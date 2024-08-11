@@ -85,11 +85,15 @@ function fetchPoliceStations() {
           node["amenity"="police_post"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="fire_station"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          way["amenity"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          relation["amenity"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["healthcare"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          way["healthcare"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          relation["healthcare"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="doctors"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["healthcare"="doctor"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
         );
-        out body;
+        out center;
     `;
 
     fetch(overpassUrl, {
@@ -116,7 +120,7 @@ function fetchPoliceStations() {
             return;
         }
 
-        let stations = data.elements.map(element => processStation(element, element.lat, element.lon));
+        let stations = data.elements.map(element => processStation(element));
 
         if (sortByDistanceEnabled) {
             stations.sort((a, b) => a.distance - b.distance);
@@ -137,13 +141,18 @@ function fetchPoliceStations() {
     });
 }
 
-function processStation(element, lat, lon) {
+function processStation(element) {
     var type = element.tags.amenity || element.tags.healthcare;
     var name = element.tags.name || 
         (type === 'fire_station' ? 'Unnamed Fire Station' : 
         type === 'hospital' ? 'Unnamed Hospital' : 
         type === 'doctors' || type === 'doctor' ? 'Unnamed Doctor\'s Office' : 'Unnamed Police Station');
     var address = element.tags['addr:street'] ? `${element.tags['addr:street']} ${element.tags['addr:housenumber'] || ''}` : 'Address not available';
+    
+    // Use center coordinates for ways and relations
+    var lat = element.lat || element.center.lat;
+    var lon = element.lon || element.center.lon;
+    
     var distance = calculateDistance(map.getCenter().lat, map.getCenter().lng, lat, lon);
     
     return {
