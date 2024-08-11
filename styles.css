@@ -198,7 +198,9 @@ label {
 }
 
 .police-emoji-icon,
-.fire-emoji-icon {
+.fire-emoji-icon,
+.hospital-emoji-icon,
+.doctor-emoji-icon {
     font-size: var(--emoji-font-size, 30px);
     text-align: center;
     line-height: var(--emoji-font-size, 30px);

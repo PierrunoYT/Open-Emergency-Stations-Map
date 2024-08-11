@@ -37,6 +37,22 @@ var fireIcon = L.divIcon({
     className: 'emoji-icon fire-emoji-icon'
 });
 
+var hospitalIcon = L.divIcon({
+    html: '🏥',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
+    className: 'emoji-icon hospital-emoji-icon'
+});
+
+var doctorIcon = L.divIcon({
+    html: '👨‍⚕️',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
+    className: 'emoji-icon doctor-emoji-icon'
+});
+
 // Ensure both emoji icons have the same font size
 document.documentElement.style.setProperty('--emoji-font-size', '30px');
 
@@ -68,6 +84,8 @@ function fetchPoliceStations() {
           node["amenity"="police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="police_post"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="fire_station"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          node["amenity"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          node["amenity"="doctors"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
         );
         out body;
     `;
@@ -119,7 +137,10 @@ function fetchPoliceStations() {
 
 function processStation(element, lat, lon) {
     var type = element.tags.amenity;
-    var name = element.tags.name || (type === 'fire_station' ? 'Unnamed Fire Station' : 'Unnamed Police Station');
+    var name = element.tags.name || 
+        (type === 'fire_station' ? 'Unnamed Fire Station' : 
+        type === 'hospital' ? 'Unnamed Hospital' : 
+        type === 'doctors' ? 'Unnamed Doctor\'s Office' : 'Unnamed Police Station');
     var address = element.tags['addr:street'] ? `${element.tags['addr:street']} ${element.tags['addr:housenumber'] || ''}` : 'Address not available';
     var distance = calculateDistance(map.getCenter().lat, map.getCenter().lng, lat, lon);
     
@@ -135,7 +156,20 @@ function processStation(element, lat, lon) {
 
 function addStationToMap(station) {
     var popupContent = `<b>${station.name}</b><br>${station.address}`;
-    var icon = station.type === 'fire_station' ? fireIcon : policeIcon;
+    var icon;
+    switch(station.type) {
+        case 'fire_station':
+            icon = fireIcon;
+            break;
+        case 'hospital':
+            icon = hospitalIcon;
+            break;
+        case 'doctors':
+            icon = doctorIcon;
+            break;
+        default:
+            icon = policeIcon;
+    }
     var marker = L.marker([station.lat, station.lon], {icon: icon})
         .bindPopup(popupContent);
     markerClusterGroup.addLayer(marker);
