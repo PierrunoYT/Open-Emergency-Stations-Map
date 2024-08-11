@@ -18,6 +18,7 @@
             <div id="legend">
                 <h3>Legend</h3>
                 <div><img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png" width="25" height="41"> Police Station</div>
+                <div><img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png" width="25" height="41"> Police Post</div>
             </div>
             <h1>Police Stations</h1>
             <input type="text" id="locationSearch" placeholder="Enter location">
@@ -67,9 +68,18 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Custom icon for police stations
-        var policeIcon = L.icon({
+        // Custom icons for police stations and police posts
+        var policeStationIcon = L.icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        var policePostIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
             iconSize: [25, 41],
             iconAnchor: [12, 41],
@@ -158,7 +168,8 @@
 
         function addStationToMap(station) {
             var popupContent = `<b>${station.name}</b><br>${station.address}`;
-            var marker = L.marker([station.lat, station.lon], {icon: policeIcon})
+            var icon = station.type === 'police' ? policeStationIcon : policePostIcon;
+            var marker = L.marker([station.lat, station.lon], {icon: icon})
                 .bindPopup(popupContent);
             markerClusterGroup.addLayer(marker);
             markers.push(marker);
