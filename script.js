@@ -35,15 +35,15 @@ let markers = [];
 let selectedStationType = '';
 let sortByDistanceEnabled = false;
 
-function fetchPoliceStations(lat, lon, radius) {
+function fetchPoliceStations() {
     document.getElementById('loading').style.display = 'block';
     var overpassUrl = 'https://overpass-api.de/api/interpreter';
-    var maxRadius = Math.min(radius, 5000); // Limit radius to 5000 meters
+    var bounds = map.getBounds();
     var query = `
         [out:json][timeout:25];
         (
-          node["amenity"="police"](around:${maxRadius},${lat},${lon});
-          node["amenity"="police_post"](around:${maxRadius},${lat},${lon});
+          node["amenity"="police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          node["amenity"="police_post"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
         );
         out body;
     `;
@@ -177,11 +177,9 @@ L.control.locate({
     }
 }).addTo(map);
 
-// Event listener for map movement
-map.on('moveend', function() {
-    var center = map.getCenter();
-    var radius = 5000; // Fixed radius of 5000 meters
-    fetchPoliceStations(center.lat, center.lng, radius);
+// Event listener for map movement and zoom
+map.on('moveend zoomend', function() {
+    fetchPoliceStations();
 });
 
 // Event listener for station type filter
@@ -201,6 +199,4 @@ document.getElementById('sortByDistance').addEventListener('change', function() 
 });
 
 // Initial fetch of police stations
-var initialCenter = map.getCenter();
-var initialRadius = 5000; // Fixed initial radius of 5000 meters
-fetchPoliceStations(initialCenter.lat, initialCenter.lng, initialRadius);
+fetchPoliceStations();
