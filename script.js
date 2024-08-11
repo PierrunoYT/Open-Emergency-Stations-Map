@@ -37,6 +37,9 @@ var fireIcon = L.divIcon({
     className: 'emoji-icon fire-emoji-icon'
 });
 
+// Ensure both emoji icons have the same font size
+document.documentElement.style.setProperty('--emoji-font-size', '30px');
+
 // Function to fetch and display police stations
 let markers = [];
 let selectedStationType = '';
