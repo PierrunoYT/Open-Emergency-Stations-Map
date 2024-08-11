@@ -196,3 +196,9 @@ label {
     border: none;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
+
+.police-emoji-icon {
+    font-size: 30px;
+    text-align: center;
+    line-height: 30px;
+}
