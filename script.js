@@ -91,6 +91,11 @@ function fetchPoliceStations() {
           way["building"="police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           relation["building"="police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="fire_station"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          way["amenity"="fire_station"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          relation["amenity"="fire_station"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          node["building"="fire_station"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          way["building"="fire_station"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          relation["building"="fire_station"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           way["amenity"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           relation["amenity"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
@@ -177,6 +182,10 @@ function processStation(element) {
     var operator = element.tags['operator'] || 'Not available';
     var wheelchair = element.tags['wheelchair'] || 'Not specified';
     
+    // Additional information for fire stations
+    var fireStationType = element.tags['fire_station:type'] || 'Not specified';
+    var vehicles = element.tags['vehicles'] || 'Not specified';
+    
     return {
         name: name,
         address: address,
@@ -190,7 +199,9 @@ function processStation(element) {
         phone: phone,
         email: email,
         operator: operator,
-        wheelchair: wheelchair
+        wheelchair: wheelchair,
+        fireStationType: fireStationType,
+        vehicles: vehicles
     };
 }
 
@@ -207,6 +218,12 @@ function addStationToMap(station) {
     `;
     if (station.specialities.length > 0) {
         popupContent += `<br><b>Specialities:</b> ${station.specialities.join(', ')}`;
+    }
+    if (station.type === 'fire_station') {
+        popupContent += `
+            <br><b>Fire Station Type:</b> ${station.fireStationType}
+            <br><b>Vehicles:</b> ${station.vehicles}
+        `;
     }
     var icon;
     switch(station.type) {
