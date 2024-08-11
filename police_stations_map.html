@@ -5,28 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Police Stations Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            display: flex;
-            height: 100vh;
-        }
-        #sidebar {
-            width: 300px;
-            padding: 20px;
-            overflow-y: auto;
-            background-color: #f0f0f0;
-        }
-        #map {
-            flex-grow: 1;
-            height: 100%;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
     <div class="container">
@@ -83,8 +62,6 @@
                     // Add to sidebar list
                     const listItem = document.createElement('li');
                     listItem.innerHTML = `<strong>${name}</strong><br>${address}`;
-                    listItem.style.cursor = 'pointer';
-                    listItem.style.marginBottom = '10px';
                     listItem.onclick = () => {
                         map.setView([lat, lon], 15);
                         marker.openPopup();
