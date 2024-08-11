@@ -1,7 +1,7 @@
 // Initialize the map
 var map = L.map('map', {
     maxZoom: 18
-}).setView([0, 0], 2);  // World view
+}).setView([47.3769, 8.5417], 12);  // Centered on Zurich, Switzerland
 
 // Add geocoder control
 L.Control.geocoder().addTo(map);
