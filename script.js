@@ -85,7 +85,9 @@ function fetchPoliceStations() {
           node["amenity"="police_post"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="fire_station"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          node["healthcare"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="doctors"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          node["healthcare"="doctor"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
         );
         out body;
     `;
@@ -136,11 +138,11 @@ function fetchPoliceStations() {
 }
 
 function processStation(element, lat, lon) {
-    var type = element.tags.amenity;
+    var type = element.tags.amenity || element.tags.healthcare;
     var name = element.tags.name || 
         (type === 'fire_station' ? 'Unnamed Fire Station' : 
         type === 'hospital' ? 'Unnamed Hospital' : 
-        type === 'doctors' ? 'Unnamed Doctor\'s Office' : 'Unnamed Police Station');
+        type === 'doctors' || type === 'doctor' ? 'Unnamed Doctor\'s Office' : 'Unnamed Police Station');
     var address = element.tags['addr:street'] ? `${element.tags['addr:street']} ${element.tags['addr:housenumber'] || ''}` : 'Address not available';
     var distance = calculateDistance(map.getCenter().lat, map.getCenter().lng, lat, lon);
     
