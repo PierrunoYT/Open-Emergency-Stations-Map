@@ -58,7 +58,9 @@
                   way["amenity"="police"](area.searchArea);
                   relation["amenity"="police"](area.searchArea);
                 );
-                out center;
+                out body;
+                >;
+                out skel qt;
             `;
 
             fetch(overpassUrl, {
@@ -71,13 +73,18 @@
                 data.elements.forEach((element, index) => {
                     var lat = element.lat || element.center.lat;
                     var lon = element.lon || element.center.lon;
+                    var name = element.tags.name || 'Unnamed Police Station';
+                    var address = element.tags['addr:street'] ? `${element.tags['addr:street']} ${element.tags['addr:housenumber'] || ''}` : 'Address not available';
+                    
+                    var popupContent = `<b>${name}</b><br>${address}`;
                     var marker = L.marker([lat, lon]).addTo(map)
-                        .bindPopup('Police Station ' + (index + 1));
+                        .bindPopup(popupContent);
 
                     // Add to sidebar list
                     const listItem = document.createElement('li');
-                    listItem.textContent = `Police Station ${index + 1}`;
+                    listItem.innerHTML = `<strong>${name}</strong><br>${address}`;
                     listItem.style.cursor = 'pointer';
+                    listItem.style.marginBottom = '10px';
                     listItem.onclick = () => {
                         map.setView([lat, lon], 15);
                         marker.openPopup();
