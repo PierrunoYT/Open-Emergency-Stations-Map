@@ -48,11 +48,12 @@
 
         function fetchPoliceStations(lat, lon, radius) {
             var overpassUrl = 'https://overpass-api.de/api/interpreter';
+            var maxRadius = Math.min(radius, 5000); // Limit radius to 5000 meters
             var query = `
                 [out:json][timeout:25];
                 (
-                  node["amenity"="police"](around:${radius},${lat},${lon});
-                  node["amenity"="police_post"](around:${radius},${lat},${lon});
+                  node["amenity"="police"](around:${maxRadius},${lat},${lon});
+                  node["amenity"="police_post"](around:${maxRadius},${lat},${lon});
                 );
                 out body;
             `;
@@ -178,7 +179,7 @@
         // Event listener for map movement
         map.on('moveend', function() {
             var center = map.getCenter();
-            var radius = map.getBounds().getNorthEast().distanceTo(map.getCenter());
+            var radius = 5000; // Fixed radius of 5000 meters
             fetchPoliceStations(center.lat, center.lng, radius);
         });
 
@@ -200,7 +201,7 @@
 
         // Initial fetch of police stations
         var initialCenter = map.getCenter();
-        var initialRadius = Math.min(5000, map.getBounds().getNorthEast().distanceTo(map.getCenter()));
+        var initialRadius = 5000; // Fixed initial radius of 5000 meters
         fetchPoliceStations(initialCenter.lat, initialCenter.lng, initialRadius);
     </script>
 </body>
