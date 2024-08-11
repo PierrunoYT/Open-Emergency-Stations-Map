@@ -17,8 +17,7 @@
         <div id="sidebar">
             <div id="legend">
                 <h3>Legend</h3>
-                <div><img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png" width="25" height="41"> Police Station</div>
-                <div><img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png" width="25" height="41"> Police Post</div>
+                <div><img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png" width="25" height="41"> Police Station/Post</div>
             </div>
             <h1>Police Stations</h1>
             <input type="text" id="locationSearch" placeholder="Enter location">
@@ -27,7 +26,7 @@
                 <label for="stationTypeFilter">Filter by type:</label>
                 <select id="stationTypeFilter">
                     <option value="">All</option>
-                    <option value="police">Police</option>
+                    <option value="police">Police Station</option>
                     <option value="police_post">Police Post</option>
                 </select>
             </div>
@@ -68,18 +67,9 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Custom icons for police stations and police posts
-        var policeStationIcon = L.icon({
+        // Custom icon for police stations and posts
+        var policeIcon = L.icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        });
-
-        var policePostIcon = L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
             iconSize: [25, 41],
             iconAnchor: [12, 41],
@@ -168,8 +158,7 @@
 
         function addStationToMap(station) {
             var popupContent = `<b>${station.name}</b><br>${station.address}`;
-            var icon = station.type === 'police' ? policeStationIcon : policePostIcon;
-            var marker = L.marker([station.lat, station.lon], {icon: icon})
+            var marker = L.marker([station.lat, station.lon], {icon: policeIcon})
                 .bindPopup(popupContent);
             markerClusterGroup.addLayer(marker);
             markers.push(marker);
