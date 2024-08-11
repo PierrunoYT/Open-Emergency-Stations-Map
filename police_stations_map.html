@@ -49,7 +49,7 @@
         function fetchPoliceStations(lat, lon, radius) {
             var overpassUrl = 'https://overpass-api.de/api/interpreter';
             var query = `
-                [out:json];
+                [out:json][timeout:25];
                 (
                   node["amenity"~"^(police|police_post)$"](around:${radius},${lat},${lon});
                   way["amenity"~"^(police|police_post)$"](around:${radius},${lat},${lon});
@@ -79,6 +79,10 @@
                 const stationsList = document.getElementById('stationsList');
                 stationsList.innerHTML = ''; // Clear existing list
 
+                if (data.remark && data.remark.includes("runtime error")) {
+                    throw new Error(data.remark);
+                }
+
                 if (!data.elements || data.elements.length === 0) {
                     console.log('No police stations found in this area');
                     return;
@@ -106,7 +110,7 @@
             })
             .catch(error => {
                 console.error('Error fetching police stations:', error);
-                alert('Failed to load police stations. Please try again later.');
+                alert('Failed to load police stations. The area might be too large or there might be too many results. Please try a smaller area or zoom in further.');
             });
         }
 
@@ -210,7 +214,7 @@
 
         // Initial fetch of police stations
         var initialCenter = map.getCenter();
-        var initialRadius = map.getBounds().getNorthEast().distanceTo(map.getCenter());
+        var initialRadius = Math.min(5000, map.getBounds().getNorthEast().distanceTo(map.getCenter()));
         fetchPoliceStations(initialCenter.lat, initialCenter.lng, initialRadius);
     </script>
 </body>
