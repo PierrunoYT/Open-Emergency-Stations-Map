@@ -82,7 +82,14 @@ function fetchPoliceStations() {
         [out:json][timeout:25];
         (
           node["amenity"="police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
-          node["amenity"="police_post"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          way["amenity"="police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          relation["amenity"="police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          node["police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          way["police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          relation["police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          node["building"="police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          way["building"="police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          relation["building"="police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="fire_station"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           way["amenity"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
@@ -147,7 +154,7 @@ function fetchPoliceStations() {
 }
 
 function processStation(element) {
-    var type = element.tags.amenity || element.tags.healthcare || element.tags.building;
+    var type = element.tags.amenity || element.tags.healthcare || element.tags.building || element.tags.police;
     var name = element.tags.name || 
         (type === 'fire_station' ? 'Unnamed Fire Station' : 
         type === 'hospital' ? 'Unnamed Hospital' : 
@@ -163,6 +170,13 @@ function processStation(element) {
     
     var specialities = element.tags['healthcare:speciality'] ? element.tags['healthcare:speciality'].split(';') : [];
     
+    var openingHours = element.tags['opening_hours'] || 'Not available';
+    var website = element.tags['website'] || 'Not available';
+    var phone = element.tags['phone'] || 'Not available';
+    var email = element.tags['email'] || 'Not available';
+    var operator = element.tags['operator'] || 'Not available';
+    var wheelchair = element.tags['wheelchair'] || 'Not specified';
+    
     return {
         name: name,
         address: address,
@@ -170,12 +184,27 @@ function processStation(element) {
         lon: lon,
         type: type,
         distance: distance,
-        specialities: specialities
+        specialities: specialities,
+        openingHours: openingHours,
+        website: website,
+        phone: phone,
+        email: email,
+        operator: operator,
+        wheelchair: wheelchair
     };
 }
 
 function addStationToMap(station) {
-    var popupContent = `<b>${station.name}</b><br>${station.address}`;
+    var popupContent = `
+        <b>${station.name}</b><br>
+        ${station.address}<br>
+        <b>Opening Hours:</b> ${station.openingHours}<br>
+        <b>Website:</b> ${station.website}<br>
+        <b>Phone:</b> ${station.phone}<br>
+        <b>Email:</b> ${station.email}<br>
+        <b>Operator:</b> ${station.operator}<br>
+        <b>Wheelchair Access:</b> ${station.wheelchair}
+    `;
     if (station.specialities.length > 0) {
         popupContent += `<br><b>Specialities:</b> ${station.specialities.join(', ')}`;
     }
@@ -193,6 +222,7 @@ function addStationToMap(station) {
             break;
         case 'police':
         case 'police_post':
+        case 'barracks':
             icon = policeIcon;
             break;
         default:
