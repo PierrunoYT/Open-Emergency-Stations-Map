@@ -92,6 +92,9 @@ function fetchPoliceStations() {
           relation["healthcare"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="doctors"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["healthcare"="doctor"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          node["amenity"="clinic"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          way["amenity"="clinic"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          relation["amenity"="clinic"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
         );
         out center;
     `;
@@ -146,7 +149,8 @@ function processStation(element) {
     var name = element.tags.name || 
         (type === 'fire_station' ? 'Unnamed Fire Station' : 
         type === 'hospital' ? 'Unnamed Hospital' : 
-        type === 'doctors' || type === 'doctor' ? 'Unnamed Doctor\'s Office' : 'Unnamed Police Station');
+        type === 'doctors' || type === 'doctor' ? 'Unnamed Doctor\'s Office' :
+        type === 'clinic' ? 'Unnamed Clinic' : 'Unnamed Police Station');
     var address = element.tags['addr:street'] ? `${element.tags['addr:street']} ${element.tags['addr:housenumber'] || ''}` : 'Address not available';
     
     // Use center coordinates for ways and relations
@@ -173,9 +177,11 @@ function addStationToMap(station) {
             icon = fireIcon;
             break;
         case 'hospital':
+        case 'clinic':
             icon = hospitalIcon;
             break;
         case 'doctors':
+        case 'doctor':
             icon = doctorIcon;
             break;
         case 'police':
