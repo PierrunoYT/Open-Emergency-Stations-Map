@@ -1,0 +1,206 @@
+// Initialize the map
+var map = L.map('map', {
+    maxZoom: 18
+}).setView([0, 0], 2);  // World view
+
+// Add geocoder control
+L.Control.geocoder().addTo(map);
+
+// Initialize marker cluster group
+var markerClusterGroup = L.markerClusterGroup({
+    maxClusterRadius: 80,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true
+});
+map.addLayer(markerClusterGroup);
+
+// Add OpenStreetMap tile layer
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+// Custom icon for police stations and posts
+var policeIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+// Function to fetch and display police stations
+let markers = [];
+let selectedStationType = '';
+let sortByDistanceEnabled = false;
+
+function fetchPoliceStations(lat, lon, radius) {
+    document.getElementById('loading').style.display = 'block';
+    var overpassUrl = 'https://overpass-api.de/api/interpreter';
+    var maxRadius = Math.min(radius, 5000); // Limit radius to 5000 meters
+    var query = `
+        [out:json][timeout:25];
+        (
+          node["amenity"="police"](around:${maxRadius},${lat},${lon});
+          node["amenity"="police_post"](around:${maxRadius},${lat},${lon});
+        );
+        out body;
+    `;
+
+    fetch(overpassUrl, {
+        method: 'POST',
+        body: 'data=' + encodeURIComponent(query)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        clearMarkers();
+        const stationsList = document.getElementById('stationsList');
+        stationsList.innerHTML = ''; // Clear existing list
+
+        if (data.remark && data.remark.includes("runtime error")) {
+            throw new Error(data.remark);
+        }
+
+        if (!data.elements || data.elements.length === 0) {
+            console.log('No police stations found in this area');
+            return;
+        }
+
+        let stations = data.elements.map(element => processPoliceStation(element, element.lat, element.lon));
+
+        if (sortByDistanceEnabled) {
+            stations.sort((a, b) => a.distance - b.distance);
+        }
+
+        stations.forEach(station => {
+            if (!selectedStationType || station.type === selectedStationType) {
+                addStationToMap(station);
+                addStationToSidebar(station);
+            }
+        });
+        document.getElementById('loading').style.display = 'none';
+    })
+    .catch(error => {
+        console.error('Error fetching police stations:', error);
+        alert('Failed to load police stations. Please try again or zoom in to a smaller area.');
+        document.getElementById('loading').style.display = 'none';
+    });
+}
+
+function processPoliceStation(element, lat, lon) {
+    var name = element.tags.name || 'Unnamed Police Station';
+    var address = element.tags['addr:street'] ? `${element.tags['addr:street']} ${element.tags['addr:housenumber'] || ''}` : 'Address not available';
+    var type = element.tags.amenity;
+    var distance = calculateDistance(map.getCenter().lat, map.getCenter().lng, lat, lon);
+    
+    return {
+        name: name,
+        address: address,
+        lat: lat,
+        lon: lon,
+        type: type,
+        distance: distance
+    };
+}
+
+function addStationToMap(station) {
+    var popupContent = `<b>${station.name}</b><br>${station.address}`;
+    var marker = L.marker([station.lat, station.lon], {icon: policeIcon})
+        .bindPopup(popupContent);
+    markerClusterGroup.addLayer(marker);
+    markers.push(marker);
+}
+
+function addStationToSidebar(station) {
+    const listItem = document.createElement('li');
+    listItem.innerHTML = `<strong>${station.name}</strong><br>${station.address}`;
+    listItem.onclick = () => {
+        map.setView([station.lat, station.lon], 15);
+        markers.find(m => m.getLatLng().lat === station.lat && m.getLatLng().lng === station.lon).openPopup();
+    };
+    document.getElementById('stationsList').appendChild(listItem);
+}
+
+function clearMarkers() {
+    markerClusterGroup.clearLayers();
+    markers = [];
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the Earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+// Function to update map based on search
+function searchLocation() {
+    var location = document.getElementById('locationSearch').value;
+    if (location) {
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length > 0) {
+                    var lat = parseFloat(data[0].lat);
+                    var lon = parseFloat(data[0].lon);
+                    map.setView([lat, lon], 12);
+                    fetchPoliceStations(lat, lon, 5000);
+                } else {
+                    alert('Location not found');
+                }
+            })
+            .catch(error => {
+                console.error('Error searching location:', error);
+                alert('Error searching location. Please try again.');
+            });
+    }
+}
+
+// Event listener for search button
+document.getElementById('searchButton').addEventListener('click', searchLocation);
+
+// Add geolocation control
+L.control.locate({
+    position: 'topright',
+    strings: {
+        title: "Show me where I am"
+    }
+}).addTo(map);
+
+// Event listener for map movement
+map.on('moveend', function() {
+    var center = map.getCenter();
+    var radius = 5000; // Fixed radius of 5000 meters
+    fetchPoliceStations(center.lat, center.lng, radius);
+});
+
+// Event listener for station type filter
+document.getElementById('stationTypeFilter').addEventListener('change', function() {
+    selectedStationType = this.value;
+    var center = map.getCenter();
+    var radius = map.getBounds().getNorthEast().distanceTo(map.getCenter());
+    fetchPoliceStations(center.lat, center.lng, radius);
+});
+
+// Event listener for sort by distance toggle
+document.getElementById('sortByDistance').addEventListener('change', function() {
+    sortByDistanceEnabled = this.checked;
+    var center = map.getCenter();
+    var radius = map.getBounds().getNorthEast().distanceTo(map.getCenter());
+    fetchPoliceStations(center.lat, center.lng, radius);
+});
+
+// Initial fetch of police stations
+var initialCenter = map.getCenter();
+var initialRadius = 5000; // Fixed initial radius of 5000 meters
+fetchPoliceStations(initialCenter.lat, initialCenter.lng, initialRadius);
