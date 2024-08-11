@@ -91,7 +91,6 @@ function fetchPoliceStations() {
           way["healthcare"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           relation["healthcare"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="doctors"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
-          node["healthcare"="doctor"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="clinic"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           way["amenity"="clinic"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           relation["amenity"="clinic"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
@@ -145,11 +144,11 @@ function fetchPoliceStations() {
 }
 
 function processStation(element) {
-    var type = element.tags.amenity || element.tags.healthcare;
+    var type = element.tags.amenity;
     var name = element.tags.name || 
         (type === 'fire_station' ? 'Unnamed Fire Station' : 
         type === 'hospital' ? 'Unnamed Hospital' : 
-        type === 'doctors' || type === 'doctor' ? 'Unnamed Doctor\'s Office' :
+        type === 'doctors' ? 'Unnamed Doctor\'s Office' :
         type === 'clinic' ? 'Unnamed Clinic' : 'Unnamed Police Station');
     var address = element.tags['addr:street'] ? `${element.tags['addr:street']} ${element.tags['addr:housenumber'] || ''}` : 'Address not available';
     
@@ -181,7 +180,6 @@ function addStationToMap(station) {
             icon = hospitalIcon;
             break;
         case 'doctors':
-        case 'doctor':
             icon = doctorIcon;
             break;
         case 'police':
