@@ -8,10 +8,17 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
 </head>
 <body>
     <div class="container">
+        <div id="loading" class="loading">Loading...</div>
         <div id="sidebar">
+            <div id="legend">
+                <h3>Legend</h3>
+                <div><img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png" width="25" height="41"> Police Station</div>
+            </div>
             <h1>Police Stations</h1>
             <input type="text" id="locationSearch" placeholder="Enter location">
             <button id="searchButton">Search</button>
@@ -36,12 +43,17 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script>
         // Initialize the map
         var map = L.map('map').setView([0, 0], 2);  // World view
 
         // Add geocoder control
         L.Control.geocoder().addTo(map);
+
+        // Initialize marker cluster group
+        var markerClusterGroup = L.markerClusterGroup();
+        map.addLayer(markerClusterGroup);
 
         // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -64,6 +76,7 @@
         let sortByDistanceEnabled = false;
 
         function fetchPoliceStations(lat, lon, radius) {
+            document.getElementById('loading').style.display = 'block';
             var overpassUrl = 'https://overpass-api.de/api/interpreter';
             var maxRadius = Math.min(radius, 5000); // Limit radius to 5000 meters
             var query = `
@@ -111,10 +124,12 @@
                         addStationToSidebar(station);
                     }
                 });
+                document.getElementById('loading').style.display = 'none';
             })
             .catch(error => {
                 console.error('Error fetching police stations:', error);
                 alert('Failed to load police stations. Please try again or zoom in to a smaller area.');
+                document.getElementById('loading').style.display = 'none';
             });
         }
 
@@ -136,8 +151,9 @@
 
         function addStationToMap(station) {
             var popupContent = `<b>${station.name}</b><br>${station.address}`;
-            var marker = L.marker([station.lat, station.lon], {icon: policeIcon}).addTo(map)
+            var marker = L.marker([station.lat, station.lon], {icon: policeIcon})
                 .bindPopup(popupContent);
+            markerClusterGroup.addLayer(marker);
             markers.push(marker);
         }
 
@@ -152,7 +168,7 @@
         }
 
         function clearMarkers() {
-            markers.forEach(marker => map.removeLayer(marker));
+            markerClusterGroup.clearLayers();
             markers = [];
         }
 
