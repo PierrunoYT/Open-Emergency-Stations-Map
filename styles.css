@@ -1,8 +1,18 @@
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --background-color: #ecf0f1;
+    --text-color: #34495e;
+    --hover-color: #2980b9;
+}
+
 body, html {
     height: 100%;
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', Arial, sans-serif;
+    color: var(--text-color);
+    background-color: var(--background-color);
 }
 
 .container {
@@ -15,7 +25,8 @@ body, html {
     width: 300px;
     padding: 20px;
     overflow-y: auto;
-    background-color: #f0f0f0;
+    background-color: white;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
 }
 
@@ -27,59 +38,108 @@ body, html {
 
 #locationSearch {
     width: 70%;
-    padding: 5px;
+    padding: 10px;
     margin-right: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
 }
 
 #searchButton {
     width: 25%;
-    padding: 5px;
+    padding: 10px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#searchButton:hover {
+    background-color: var(--hover-color);
 }
 
 #stationsList {
     margin-top: 20px;
+    padding: 0;
+    list-style-type: none;
 }
 
 #stationsList li {
     cursor: pointer;
     margin-bottom: 10px;
-    padding: 5px;
-    background-color: #ffffff;
-    border-radius: 5px;
+    padding: 10px;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 }
 
 #stationsList li:hover {
-    background-color: #e0e0e0;
+    background-color: var(--background-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
+
 .loading {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 0.9);
     padding: 20px;
-    border-radius: 5px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     z-index: 1000;
     display: none;
+    font-weight: bold;
 }
 
 #legend {
     background-color: white;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 #legend h3 {
     margin-top: 0;
+    color: var(--secondary-color);
+    font-size: 18px;
 }
 
 #legend div {
     display: flex;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
 #legend img {
-    margin-right: 10px;
+    margin-right: 15px;
+}
+
+#stationTypeFilter, #sortByDistance {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background-color: white;
+    font-size: 14px;
+}
+
+input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+h1 {
+    color: var(--secondary-color);
+    font-size: 24px;
+    margin-bottom: 20px;
 }
