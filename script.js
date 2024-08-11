@@ -90,6 +90,9 @@ function fetchPoliceStations() {
           node["healthcare"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           way["healthcare"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           relation["healthcare"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          node["building"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          way["building"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          relation["building"="hospital"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="doctors"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="clinic"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           way["amenity"="clinic"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
@@ -144,7 +147,7 @@ function fetchPoliceStations() {
 }
 
 function processStation(element) {
-    var type = element.tags.amenity;
+    var type = element.tags.amenity || element.tags.healthcare || element.tags.building;
     var name = element.tags.name || 
         (type === 'fire_station' ? 'Unnamed Fire Station' : 
         type === 'hospital' ? 'Unnamed Hospital' : 
@@ -158,18 +161,24 @@ function processStation(element) {
     
     var distance = calculateDistance(map.getCenter().lat, map.getCenter().lng, lat, lon);
     
+    var specialities = element.tags['healthcare:speciality'] ? element.tags['healthcare:speciality'].split(';') : [];
+    
     return {
         name: name,
         address: address,
         lat: lat,
         lon: lon,
         type: type,
-        distance: distance
+        distance: distance,
+        specialities: specialities
     };
 }
 
 function addStationToMap(station) {
     var popupContent = `<b>${station.name}</b><br>${station.address}`;
+    if (station.specialities.length > 0) {
+        popupContent += `<br><b>Specialities:</b> ${station.specialities.join(', ')}`;
+    }
     var icon;
     switch(station.type) {
         case 'fire_station':
