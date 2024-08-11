@@ -80,7 +80,7 @@ function fetchPoliceStations() {
             return;
         }
 
-        let stations = data.elements.map(element => processPoliceStation(element, element.lat, element.lon));
+        let stations = data.elements.map(element => processStation(element, element.lat, element.lon));
 
         if (sortByDistanceEnabled) {
             stations.sort((a, b) => a.distance - b.distance);
