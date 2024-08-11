@@ -46,13 +46,20 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script>
         // Initialize the map
-        var map = L.map('map').setView([0, 0], 2);  // World view
+        var map = L.map('map', {
+            maxZoom: 18
+        }).setView([0, 0], 2);  // World view
 
         // Add geocoder control
         L.Control.geocoder().addTo(map);
 
         // Initialize marker cluster group
-        var markerClusterGroup = L.markerClusterGroup();
+        var markerClusterGroup = L.markerClusterGroup({
+            maxClusterRadius: 80,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true
+        });
         map.addLayer(markerClusterGroup);
 
         // Add OpenStreetMap tile layer
