@@ -50,8 +50,18 @@
             .then(data => {
                 const stationsList = document.getElementById('stationsList');
                 data.elements.forEach((element, index) => {
-                    var lat = element.lat || element.center.lat;
-                    var lon = element.lon || element.center.lon;
+                    var lat, lon;
+                    if (element.lat && element.lon) {
+                        lat = element.lat;
+                        lon = element.lon;
+                    } else if (element.center && element.center.lat && element.center.lon) {
+                        lat = element.center.lat;
+                        lon = element.center.lon;
+                    } else {
+                        console.warn('Skipping element without valid coordinates:', element);
+                        return; // Skip this element
+                    }
+
                     var name = element.tags.name || 'Unnamed Police Station';
                     var address = element.tags['addr:street'] ? `${element.tags['addr:street']} ${element.tags['addr:housenumber'] || ''}` : 'Address not available';
                     
