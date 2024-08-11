@@ -51,13 +51,10 @@
             var query = `
                 [out:json][timeout:25];
                 (
-                  node["amenity"~"^(police|police_post)$"](around:${radius},${lat},${lon});
-                  way["amenity"~"^(police|police_post)$"](around:${radius},${lat},${lon});
-                  relation["amenity"~"^(police|police_post)$"](around:${radius},${lat},${lon});
+                  node["amenity"="police"](around:${radius},${lat},${lon});
+                  node["amenity"="police_post"](around:${radius},${lat},${lon});
                 );
                 out body;
-                >;
-                out skel qt;
             `;
 
             fetch(overpassUrl, {
@@ -68,11 +65,7 @@
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                return response.text();
-            })
-            .then(text => {
-                console.log('Raw response:', text);  // Log the raw response
-                return JSON.parse(text);
+                return response.json();
             })
             .then(data => {
                 clearMarkers();
@@ -88,14 +81,7 @@
                     return;
                 }
 
-                let stations = [];
-                data.elements.forEach((element) => {
-                    if (element.type === 'node' && element.lat && element.lon) {
-                        stations.push(processPoliceStation(element, element.lat, element.lon));
-                    } else if ((element.type === 'way' || element.type === 'relation') && element.center) {
-                        stations.push(processPoliceStation(element, element.center.lat, element.center.lon));
-                    }
-                });
+                let stations = data.elements.map(element => processPoliceStation(element, element.lat, element.lon));
 
                 if (sortByDistanceEnabled) {
                     stations.sort((a, b) => a.distance - b.distance);
@@ -110,7 +96,7 @@
             })
             .catch(error => {
                 console.error('Error fetching police stations:', error);
-                alert('Failed to load police stations. The area might be too large or there might be too many results. Please try a smaller area or zoom in further.');
+                alert('Failed to load police stations. Please try again or zoom in to a smaller area.');
             });
         }
 
