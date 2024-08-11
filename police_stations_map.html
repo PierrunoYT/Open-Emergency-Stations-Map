@@ -64,7 +64,16 @@
                 method: 'POST',
                 body: 'data=' + encodeURIComponent(query)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                console.log('Raw response:', text);  // Log the raw response
+                return JSON.parse(text);
+            })
             .then(data => {
                 clearMarkers();
                 const stationsList = document.getElementById('stationsList');
