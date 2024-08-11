@@ -20,13 +20,21 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// Custom icon for police stations and posts using emoji
+// Custom icons for police stations and fire stations using emoji
 var policeIcon = L.divIcon({
     html: '👮',
     iconSize: [30, 30],
     iconAnchor: [15, 15],
     popupAnchor: [0, -15],
-    className: 'police-emoji-icon'
+    className: 'emoji-icon police-emoji-icon'
+});
+
+var fireIcon = L.divIcon({
+    html: '🚒',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
+    className: 'emoji-icon fire-emoji-icon'
 });
 
 // Function to fetch and display police stations
@@ -43,6 +51,7 @@ function fetchPoliceStations() {
         (
           node["amenity"="police"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
           node["amenity"="police_post"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+          node["amenity"="fire_station"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
         );
         out body;
     `;
@@ -92,10 +101,10 @@ function fetchPoliceStations() {
     });
 }
 
-function processPoliceStation(element, lat, lon) {
-    var name = element.tags.name || 'Unnamed Police Station';
-    var address = element.tags['addr:street'] ? `${element.tags['addr:street']} ${element.tags['addr:housenumber'] || ''}` : 'Address not available';
+function processStation(element, lat, lon) {
     var type = element.tags.amenity;
+    var name = element.tags.name || (type === 'fire_station' ? 'Unnamed Fire Station' : 'Unnamed Police Station');
+    var address = element.tags['addr:street'] ? `${element.tags['addr:street']} ${element.tags['addr:housenumber'] || ''}` : 'Address not available';
     var distance = calculateDistance(map.getCenter().lat, map.getCenter().lng, lat, lon);
     
     return {
@@ -110,7 +119,8 @@ function processPoliceStation(element, lat, lon) {
 
 function addStationToMap(station) {
     var popupContent = `<b>${station.name}</b><br>${station.address}`;
-    var marker = L.marker([station.lat, station.lon], {icon: policeIcon})
+    var icon = station.type === 'fire_station' ? fireIcon : policeIcon;
+    var marker = L.marker([station.lat, station.lon], {icon: icon})
         .bindPopup(popupContent);
     markerClusterGroup.addLayer(marker);
     markers.push(marker);
